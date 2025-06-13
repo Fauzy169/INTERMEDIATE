@@ -82,7 +82,7 @@ export default class AddStoryPage {
     window.addEventListener('hashchange', this._stopCamera.bind(this));
     await this._initMap();
     this._setupEventListeners();
-    this._cleanup(); // ⬅️ pastikan kamera mati saat masuk halaman
+    this._cleanup();
   }
 
   _setupEventListeners() {
@@ -122,9 +122,11 @@ export default class AddStoryPage {
         this._location = { lat: e.latlng.lat, lon: e.latlng.lng };
       });
     } catch (error) {
-      document.getElementById('map').innerHTML = `<div class="map-error">
-        <i class="fas fa-map-marked-alt"></i>
-        <p>Map could not be loaded</p></div>`;
+      document.getElementById('map').innerHTML = `
+        <div class="map-error">
+          <i class="fas fa-map-marked-alt"></i>
+          <p>Map could not be loaded</p>
+        </div>`;
     }
   }
 
@@ -138,7 +140,9 @@ export default class AddStoryPage {
     try {
       const position = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true, timeout: 5000, maximumAge: 0
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
         });
       });
       this._location = {
@@ -239,7 +243,12 @@ export default class AddStoryPage {
       const description = `[HEADER]${header}[/HEADER]\n${content}`;
 
       if (!header || !content) throw new Error('Header and content are required');
-      if (!this._photoFile) throw new Error('Photo is required');
+      if (!this._photoFile) {
+        errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> Please upload or take a photo.`;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Story';
+        return;
+      }
 
       const formData = new FormData();
       formData.append('description', description);
@@ -262,7 +271,11 @@ export default class AddStoryPage {
       }
 
       if (response?.success) {
-        await saveData(response.data); // ⬅️ simpan ke IndexedDB
+        // Tambahkan ID jika tidak ada (untuk IndexedDB)
+        if (!response.data.id) {
+          response.data.id = `local-${Date.now()}`;
+        }
+        await saveData(response.data);
         document.getElementById('storyForm').reset();
         document.getElementById('photoPreview').innerHTML = '';
         this._photoFile = null;
