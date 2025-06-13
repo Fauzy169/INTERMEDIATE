@@ -54,22 +54,28 @@ export default class StoryPage {
     }
   }
 
-  async _initMap() {
-    try {
-      this._map = initMap('map', {
-        center: CONFIG.DEFAULT_MAP_CENTER,
-        zoom: CONFIG.DEFAULT_MAP_ZOOM,
-      });
-    } catch (error) {
-      console.error('Map initialization failed:', error);
-      document.getElementById('map').innerHTML = `
-        <div class="map-error">
-          <i class="fas fa-map-marked-alt"></i>
-          <p>Map could not be loaded</p>
-        </div>
-      `;
+async _initMap() {
+  try {
+    const mapContainer = document.getElementById('map');
+    if (!mapContainer) {
+      console.warn('Map container not found');
+      return;
     }
+    this._map = initMap('map', {
+      center: CONFIG.DEFAULT_MAP_CENTER,
+      zoom: CONFIG.DEFAULT_MAP_ZOOM,
+    });
+  } catch (error) {
+    console.error('Map initialization failed:', error);
+    document.getElementById('map').innerHTML = `
+      <div class="map-error">
+        <i class="fas fa-map-marked-alt"></i>
+        <p>Map could not be loaded</p>
+      </div>
+    `;
   }
+}
+
 
   async _loadStories(loadMore = false) {
     await this._presenter.loadStories(loadMore);

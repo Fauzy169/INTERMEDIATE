@@ -9,7 +9,7 @@ const registerServiceWorker = async () => {
       });
       console.log('ServiceWorker registration successful with scope: ', registration.scope);
 
-      // Tunggu hingga benar-benar aktif
+      // Pastikan SW benar-benar aktif
       await navigator.serviceWorker.ready;
 
       const permission = await Notification.requestPermission();
@@ -21,7 +21,7 @@ const registerServiceWorker = async () => {
           applicationServerKey: CONFIG.VAPID_PUBLIC_KEY,
         });
 
-        // Ambil data subscription dan filter hanya field yang diizinkan
+        // Kirim hanya field yang diizinkan
         const raw = subscription.toJSON();
         const safeSubscription = {
           endpoint: raw.endpoint,

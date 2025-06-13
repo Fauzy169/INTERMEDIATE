@@ -231,6 +231,12 @@ export default class AddStoryPage {
   }
 
   async _handleSubmit() {
+    if (!this._photoFile) {
+      errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> Please upload or take a photo.`;
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Story';
+      return;
+    }
     const submitBtn = document.getElementById('submitBtn');
     const errorElement = document.getElementById('formError');
     submitBtn.disabled = true;
@@ -272,6 +278,9 @@ export default class AddStoryPage {
 
       if (response?.success) {
         // Tambahkan ID jika tidak ada (untuk IndexedDB)
+        if (!response.data.id) {
+          response.data.id = `local-${Date.now()}`;
+        }
         if (!response.data.id) {
           response.data.id = `local-${Date.now()}`;
         }
