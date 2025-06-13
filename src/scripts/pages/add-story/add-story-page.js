@@ -1,7 +1,7 @@
-// src/scripts/pages/add-story/add-story-page.js
 import CONFIG from '../../config';
 import { addStory, addStoryAsGuest } from '../../data/api';
 import { initMap } from '../../utils/map';
+import { saveData } from '../../data/database';
 
 export default class AddStoryPage {
   constructor() {
@@ -24,13 +24,7 @@ export default class AddStoryPage {
               <i class="fas fa-heading"></i>
               <span>Story Header/Title</span>
             </label>
-            <input 
-              type="text" 
-              id="header" 
-              name="header" 
-              placeholder="Enter story title/header" 
-              required
-            >
+            <input type="text" id="header" name="header" placeholder="Enter story title/header" required>
           </div>
 
           <div class="form-section">
@@ -38,12 +32,7 @@ export default class AddStoryPage {
               <i class="fas fa-align-left"></i>
               <span>Story Description</span>
             </label>
-            <textarea 
-              id="description" 
-              name="description" 
-              placeholder="Tell us about your experience..." 
-              required
-            ></textarea>
+            <textarea id="description" name="description" placeholder="Tell us about your experience..." required></textarea>
           </div>
 
           <div class="form-section">
@@ -67,9 +56,7 @@ export default class AddStoryPage {
             <label class="toggle-container">
               <input type="checkbox" id="includeLocation" name="includeLocation">
               <span class="toggle-slider"></span>
-              <span class="toggle-label">
-                <i class="fas fa-map-marker-alt"></i> Include Location
-              </span>
+              <span class="toggle-label"><i class="fas fa-map-marker-alt"></i> Include Location</span>
             </label>
             <div id="map" class="map-container"></div>
           </div>
@@ -78,9 +65,7 @@ export default class AddStoryPage {
             <label class="toggle-container">
               <input type="checkbox" id="asGuest" name="asGuest">
               <span class="toggle-slider"></span>
-              <span class="toggle-label">
-                <i class="fas fa-user-secret"></i> Post as Guest
-              </span>
+              <span class="toggle-label"><i class="fas fa-user-secret"></i> Post as Guest</span>
             </label>
           </div>
 
@@ -97,6 +82,7 @@ export default class AddStoryPage {
     window.addEventListener('hashchange', this._stopCamera.bind(this));
     await this._initMap();
     this._setupEventListeners();
+    this._cleanup(); // ⬅️ pastikan kamera mati saat masuk halaman
   }
 
   _setupEventListeners() {
@@ -131,85 +117,61 @@ export default class AddStoryPage {
     try {
       this._map = initMap('map');
       this._map.on('click', (e) => {
-        if (this._marker) {
-          this._map.removeLayer(this._marker);
-        }
+        if (this._marker) this._map.removeLayer(this._marker);
         this._marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(this._map);
         this._location = { lat: e.latlng.lat, lon: e.latlng.lng };
       });
     } catch (error) {
-      console.error('Map initialization failed:', error);
-      document.getElementById('map').innerHTML = `
-        <div class="map-error">
-          <i class="fas fa-map-marked-alt"></i>
-          <p>Map could not be loaded</p>
-        </div>
-      `;
+      document.getElementById('map').innerHTML = `<div class="map-error">
+        <i class="fas fa-map-marked-alt"></i>
+        <p>Map could not be loaded</p></div>`;
     }
   }
 
   _toggleLocation(show) {
     const mapElement = document.getElementById('map');
     mapElement.style.display = show ? 'block' : 'none';
-    if (show && !this._location) {
-      this._getUserLocation();
-    }
+    if (show && !this._location) this._getUserLocation();
   }
 
   async _getUserLocation() {
     try {
       const position = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
+          enableHighAccuracy: true, timeout: 5000, maximumAge: 0
         });
       });
-      
       this._location = {
         lat: position.coords.latitude,
         lon: position.coords.longitude,
         accuracy: position.coords.accuracy
       };
-      
-      if (this._marker) {
-        this._map.removeLayer(this._marker);
-      }
-      
+      if (this._marker) this._map.removeLayer(this._marker);
       this._marker = L.marker([this._location.lat, this._location.lon])
         .addTo(this._map)
         .bindPopup(`Your location (accuracy: ${Math.round(this._location.accuracy)}m)`)
         .openPopup();
-      
       this._map.setView([this._location.lat, this._location.lon], 15);
-      
-    } catch (error) {
-      console.error('Location error:', error);
-      this._showLocationError();
+    } catch (err) {
+      console.error('Geolocation error:', err);
     }
   }
 
-  async _takePhoto() {
-    try {
-      this._stopCamera();
-      this._usingFrontCamera = false;
-      
-      this._stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      });
-
+  _takePhoto() {
+    this._stopCamera();
+    this._usingFrontCamera = false;
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    }).then(stream => {
+      this._stream = stream;
       const video = document.createElement('video');
-      video.srcObject = this._stream;
+      video.srcObject = stream;
       video.playsInline = true;
       video.play();
 
-      const photoPreview = document.getElementById('photoPreview');
-      photoPreview.innerHTML = '';
-      photoPreview.appendChild(video);
+      const preview = document.getElementById('photoPreview');
+      preview.innerHTML = '';
+      preview.appendChild(video);
 
       const controls = document.createElement('div');
       controls.className = 'camera-controls';
@@ -223,34 +185,8 @@ export default class AddStoryPage {
       captureBtn.addEventListener('click', () => this._capturePhoto(video));
 
       controls.append(switchBtn, captureBtn);
-      photoPreview.appendChild(controls);
-
-    } catch (error) {
-      console.error('Camera error:', error);
-      alert('Could not access camera: ' + error.message);
-    }
-  }
-
-  async _switchCamera() {
-    this._stopCamera();
-    this._usingFrontCamera = !this._usingFrontCamera;
-    
-    try {
-      this._stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: this._usingFrontCamera ? 'user' : 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      });
-
-      const video = document.querySelector('#photoPreview video');
-      video.srcObject = this._stream;
-      video.play();
-    } catch (error) {
-      console.error('Switch camera error:', error);
-      alert('Failed to switch camera: ' + error.message);
-    }
+      preview.appendChild(controls);
+    }).catch(err => alert('Camera error: ' + err.message));
   }
 
   _capturePhoto(video) {
@@ -258,117 +194,41 @@ export default class AddStoryPage {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-
     if (this._usingFrontCamera) {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
     }
-
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
     canvas.toBlob((blob) => {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `story-${timestamp}.jpg`;
-      
-      this._photoFile = new File([blob], filename, {
-        type: 'image/jpeg',
-        lastModified: Date.now()
-      });
-
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(this._photoFile);
-      const fileInput = document.getElementById('photoInput');
-      fileInput.files = dataTransfer.files;
-
-      this._formData = new FormData();
-      this._formData.append('photo', this._photoFile);
-
-      this._showPhotoPreview(canvas.toDataURL('image/jpeg', 0.8));
+      const filename = `story-${Date.now()}.jpg`;
+      this._photoFile = new File([blob], filename, { type: 'image/jpeg' });
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('photoPreview').innerHTML = `
+          <div class="preview-container">
+            <img src="${e.target.result}" alt="Preview" class="photo-preview-img">
+          </div>`;
+      };
+      reader.readAsDataURL(this._photoFile);
       this._stopCamera();
-
     }, 'image/jpeg', 0.8);
-  }
-
-  _showPhotoPreview(imageSrc) {
-    const photoPreview = document.getElementById('photoPreview');
-    photoPreview.innerHTML = `
-      <div class="preview-container">
-        <img src="${imageSrc}" alt="Preview" class="photo-preview-img">
-        <div class="preview-overlay">
-          <button type="button" class="retake-btn">
-            <i class="fas fa-redo"></i> Retake
-          </button>
-        </div>
-      </div>
-    `;
-
-    document.querySelector('.retake-btn').addEventListener('click', () => {
-      document.getElementById('photoInput').value = '';
-      this._photoFile = null;
-      this._formData = new FormData();
-      this._takePhoto();
-    });
   }
 
   _stopCamera() {
     if (this._stream) {
-      this._stream.getTracks().forEach(track => track.stop());
+      this._stream.getTracks().forEach(t => t.stop());
       this._stream = null;
     }
   }
-  
+
   _cleanup() {
     window.removeEventListener('hashchange', this._stopCamera);
     this._stopCamera();
   }
 
-  _handlePhotoChange(file) {
-    if (!file) return;
-
-    if (file.size > 1 * 1024 * 1024) {
-      alert('Photo must be less than 1MB');
-      return;
-    }
-
-    const originalName = file.name;
-    const extension = originalName.split('.').pop();
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const newFilename = `story-upload-${timestamp}.${extension}`;
-    
-    this._photoFile = new File([file], newFilename, {
-      type: file.type,
-      lastModified: file.lastModified
-    });
-
-    this._formData = new FormData();
-    this._formData.append('photo', this._photoFile);
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      document.getElementById('photoPreview').innerHTML = `
-        <div class="preview-container">
-          <img src="${e.target.result}" alt="Preview" class="photo-preview-img">
-          <div class="preview-overlay">
-            <button type="button" class="retake-btn">
-              <i class="fas fa-redo"></i> Retake
-            </button>
-          </div>
-        </div>
-      `;
-      document.querySelector('.retake-btn').addEventListener('click', () => {
-        document.getElementById('photoInput').value = '';
-        this._photoFile = null;
-        this._formData = new FormData();
-        document.getElementById('photoPreview').innerHTML = '';
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-
   async _handleSubmit() {
     const submitBtn = document.getElementById('submitBtn');
     const errorElement = document.getElementById('formError');
-    
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
     errorElement.textContent = '';
@@ -376,22 +236,14 @@ export default class AddStoryPage {
     try {
       const header = document.getElementById('header').value.trim();
       const content = document.getElementById('description').value.trim();
+      const description = `[HEADER]${header}[/HEADER]\n${content}`;
 
-      if (content.includes('[HEADER]') || content.includes('[/HEADER]')) {
-    if (!content.match(/\[HEADER\].*\[\/HEADER\]/s)) {
-      throw new Error('Invalid header tags. Use [HEADER]...[/HEADER] format');
-    }
-  }
-      
       if (!header || !content) throw new Error('Header and content are required');
       if (!this._photoFile) throw new Error('Photo is required');
-
-      const description = `[HEADER]${header}[/HEADER]\n${content}`;
 
       const formData = new FormData();
       formData.append('description', description);
       formData.append('photo', this._photoFile);
-      
       if (this._includeLocation && this._location) {
         formData.append('lat', this._location.lat.toString());
         formData.append('lon', this._location.lon.toString());
@@ -399,29 +251,30 @@ export default class AddStoryPage {
 
       const asGuest = document.getElementById('asGuest').checked;
       const token = localStorage.getItem(CONFIG.USER_TOKEN_KEY);
+      let response = null;
 
       if (asGuest) {
-        const response = await addStoryAsGuest(formData);
-        if (!response || !response.success) {
-          throw new Error(response?.message || 'Failed to add story as guest');
-        }
+        response = await addStoryAsGuest(formData);
       } else if (token) {
-        const response = await addStory(formData, token);
-        if (!response || !response.success) {
-          throw new Error(response?.message || 'Failed to add story');
-        }
+        response = await addStory(formData, token);
       } else {
         throw new Error('Please login or post as guest');
       }
 
-      alert('Story published successfully!');
-      window.location.hash = '#/stories';
+      if (response?.success) {
+        await saveData(response.data); // ⬅️ simpan ke IndexedDB
+        document.getElementById('storyForm').reset();
+        document.getElementById('photoPreview').innerHTML = '';
+        this._photoFile = null;
+        alert('Story published successfully!');
+        window.location.hash = '#/stories';
+      } else {
+        throw new Error(response?.message || 'Failed to submit story');
+      }
 
     } catch (error) {
       console.error('Submission error:', error);
-      errorElement.innerHTML = `
-        <i class="fas fa-exclamation-circle"></i> ${error.message}
-      `;
+      errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${error.message}`;
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Story';
