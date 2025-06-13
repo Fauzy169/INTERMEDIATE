@@ -6,7 +6,7 @@ const CONFIG = {
   DATABASE_VERSION: 1,
   OBJECT_STORE_NAME: 'stories',
   USER_TOKEN_KEY: 'user_token',
-  API_KEY: 'YOUR_DICODING_API_KEY', // Register at story-api.dicoding.dev
+  API_KEY: 'https://story-api.dicoding.dev/v1/', // Register at story-api.dicoding.dev
   MAP_API_KEY: 'PJJzdTS3sMYydnGU89hq',
   DEFAULT_MAP_ZOOM: 5,
   DEFAULT_MAP_CENTER: [-2.548926, 118.014863], // Center of Indonesia
