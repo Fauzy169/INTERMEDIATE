@@ -14,6 +14,7 @@ const routes = {
   '/add-story': new AddStoryPage(),
   '/login': new LoginPage(),
   '/register': new RegisterPage(),
+  '*': new NotFoundPage(),
 };
 
 export default routes;

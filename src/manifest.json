@@ -17,5 +17,24 @@
         "sizes": "512x512",
         "type": "image/png"
       }
+    ],
+    "shortcuts": [
+      {
+        "name": "Add Story",
+        "url": "/#/add-story",
+        "icons": [{ "src": "favicon.png", "sizes": "192x192" }]
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "images/screenshot-desktop.png",
+        "type": "image/png",
+        "sizes": "1280x720"
+      },
+      {
+        "src": "images/screenshot-mobile.png",
+        "type": "image/png",
+        "sizes": "360x640"
+      }
     ]
   }
