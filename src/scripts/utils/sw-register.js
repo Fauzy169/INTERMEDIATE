@@ -1,6 +1,17 @@
 import CONFIG from '../config';
-
+import { subscribePushNotification } from '../data/api';
 const registerServiceWorker = async () => {
+  
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: CONFIG.VAPID_PUBLIC_KEY
+  });
+
+  const token = localStorage.getItem(CONFIG.USER_TOKEN_KEY);
+  if (token) {
+    await subscribePushNotification(subscription, token);
+  }
+
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', {

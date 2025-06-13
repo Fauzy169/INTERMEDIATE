@@ -1,8 +1,9 @@
-// src/scripts/pages/story/detail-page.js
 import { getStoryDetail } from '../../data/api';
 import { showFormattedDate } from '../../utils';
 import { initMap } from '../../utils/map';
 import CONFIG from '../../config';
+import { saveData } from '../../data/database';
+import { getData } from '../../data/database';
 
 export default class StoryDetailPage {
   constructor() {
@@ -19,35 +20,34 @@ export default class StoryDetailPage {
     `;
   }
 
-  // Add this to your afterRender() method in detail-page.js
-async afterRender() {
-  const { id } = this._parseUrl();
-  
-  // Handle back button with transition
-  const backLink = document.querySelector('.back-link');
-  if (backLink) {
-    backLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      
-      if (!document.startViewTransition) {
-        window.location.hash = '#/stories';
-        return;
-      }
-      
-      document.startViewTransition(() => {
-        window.location.hash = '#/stories';
+  async afterRender() {
+    const { id } = this._parseUrl();
+
+    // Handle back button with transition
+    const backLink = document.querySelector('.back-link');
+    if (backLink) {
+      backLink.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        if (!document.startViewTransition) {
+          window.location.hash = '#/stories';
+          return;
+        }
+
+        document.startViewTransition(() => {
+          window.location.hash = '#/stories';
+        });
       });
-    });
+    }
+
+    await this._loadStory(id);
+
+    // Set up image transition
+    const detailImage = document.querySelector('.story-detail-image');
+    if (detailImage) {
+      detailImage.style.viewTransitionName = 'story-detail-image';
+    }
   }
-  
-  await this._loadStory(id);
-  
-  // Set up image transition
-  const detailImage = document.querySelector('.story-detail-image');
-  if (detailImage) {
-    detailImage.style.viewTransitionName = 'story-detail-image';
-  }
-}
 
   _parseUrl() {
     const url = window.location.hash.slice(1).split('/');
@@ -60,80 +60,94 @@ async afterRender() {
     try {
       const token = localStorage.getItem(CONFIG.USER_TOKEN_KEY);
       const response = await getStoryDetail(id, token);
-      
+
       // Check for valid response structure
       if (!response || typeof response !== 'object' || !response.story) {
         throw new Error('Invalid story data structure');
       }
 
       this._story = response.story;
+      await saveData(this._story); // <== SIMPAN ke IndexedDB
       this._renderStory();
-      
+
       if (this._story.lat && this._story.lon) {
         this._initMap();
       }
     } catch (error) {
       console.error('Error loading story:', error);
+
+      // fallback to local IndexedDB
+      try {
+        const fallback = await getData(id);
+        if (fallback) {
+          this._story = fallback;
+          this._renderStory();
+          if (this._story.lat && this._story.lon) {
+            this._initMap();
+          }
+          return;
+        }
+      } catch (dbErr) {
+        console.error('Fallback load failed:', dbErr);
+      }
+
       this._showError(error);
     }
   }
 
   _initMap() {
-  try {
-    const mapContainer = document.getElementById('storyMap');
-    if (!mapContainer) return;
+    try {
+      const mapContainer = document.getElementById('storyMap');
+      if (!mapContainer) return;
 
-    this._map = initMap('storyMap', {
-      center: [this._story.lat, this._story.lon],
-      zoom: 12,
-    });
-    
-    // Parse header dari description
-    let header = this._story.name + "'s Story";
-    let description = this._story.description;
-    
-    const headerMatch = description.match(/\[HEADER\](.*?)\[\/HEADER\]/s);
-    if (headerMatch && headerMatch[1]) {
-      header = headerMatch[1].trim();
-      description = description.replace(/\[HEADER\].*?\[\/HEADER\]/s, '').trim();
-    }
+      this._map = initMap('storyMap', {
+        center: [this._story.lat, this._story.lon],
+        zoom: 12,
+      });
 
-    L.marker([this._story.lat, this._story.lon]).addTo(this._map)
-      .bindPopup(`
-        <h3>${header}</h3>
-        <p>${description}</p>
-      `)
-      .openPopup();
-  } catch (mapError) {
-    console.error('Map initialization failed:', mapError);
-    const mapContainer = document.getElementById('storyMap');
-    if (mapContainer) {
-      mapContainer.innerHTML = `
-        <div class="map-error">
-          <i class="fas fa-map-marked-alt"></i>
-          <p>Map could not be loaded</p>
-        </div>
-      `;
+      let header = this._story.name + "'s Story";
+      let description = this._story.description;
+
+      const headerMatch = description.match(/\[HEADER\](.*?)\[\/HEADER\]/s);
+      if (headerMatch && headerMatch[1]) {
+        header = headerMatch[1].trim();
+        description = description.replace(/\[HEADER\].*?\[\/HEADER\]/s, '').trim();
+      }
+
+      L.marker([this._story.lat, this._story.lon]).addTo(this._map)
+        .bindPopup(`
+          <h3>${header}</h3>
+          <p>${description}</p>
+        `)
+        .openPopup();
+    } catch (mapError) {
+      console.error('Map initialization failed:', mapError);
+      const mapContainer = document.getElementById('storyMap');
+      if (mapContainer) {
+        mapContainer.innerHTML = `
+          <div class="map-error">
+            <i class="fas fa-map-marked-alt"></i>
+            <p>Map could not be loaded</p>
+          </div>
+        `;
+      }
     }
   }
-}
 
   _renderStory() {
     try {
       let description = this._story.description;
       let header = this._story.name;
-      
-      const headerRegex = /\[HEADER\](.*?)\[\/HEADER\]/s;
-    const headerMatch = description.match(headerRegex);
 
-    if (headerMatch && headerMatch[1]) {
-      header = headerMatch[1].trim();
-      description = description.replace(headerRegex, '').trim();
-      
-      // Clean up any remaining malformed tags
-      description = description.replace(/\[HEADER\].*$/s, '').trim();
-      description = description.replace(/^.*\[\/HEADER\]/s, '').trim();
-    }
+      const headerRegex = /\[HEADER\](.*?)\[\/HEADER\]/s;
+      const headerMatch = description.match(headerRegex);
+
+      if (headerMatch && headerMatch[1]) {
+        header = headerMatch[1].trim();
+        description = description.replace(headerRegex, '').trim();
+        description = description.replace(/\[HEADER\].*$/s, '').trim();
+        description = description.replace(/^.*\[\/HEADER\]/s, '').trim();
+      }
 
       document.getElementById('storyDetail').innerHTML = `
         <article class="story-detail-card">
@@ -144,7 +158,7 @@ async afterRender() {
             <h2>${header}</h2>
             <time datetime="${this._story.createdAt}">${showFormattedDate(this._story.createdAt)}</time>
             <p>${description}</p>
-            
+
             ${this._story.lat && this._story.lon ? `
               <div class="story-detail-location">
                 <h3>Location</h3>
@@ -165,7 +179,7 @@ async afterRender() {
     let errorMessage = 'The story you\'re looking for doesn\'t exist or may have been removed.';
     let errorTitle = 'Story Not Found';
     let showLogin = false;
-    
+
     if (error.message.includes('authentication') || error.message.includes('Missing authentication')) {
       errorMessage = 'Please login to view this story';
       errorTitle = 'Authentication Required';

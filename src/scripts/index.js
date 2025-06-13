@@ -71,3 +71,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 });
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Tampilkan tombol
+  const installBtn = document.createElement('button');
+  installBtn.textContent = 'Install App';
+  installBtn.addEventListener('click', () => {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      installBtn.remove();
+    });
+  });
+  document.body.append(installBtn);
+});
