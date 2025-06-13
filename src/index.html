@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>    
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Share your stories with the world">
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+    <title>Story Sharing App</title>
+    <!-- Load Leaflet CSS from CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+    <!-- Load Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to content</a>
+    <header class="main-header">
+      <div class="container">
+        <div class="header-content">
+          <a class="brand-logo" href="#/">
+            <i class="fas fa-book-open"></i> StoryShare
+          </a>
+
+          <nav id="navigation-drawer" class="navigation-drawer" aria-label="Main navigation">
+            <ul id="nav-list" class="nav-list">
+              <li><a href="#/" aria-current="page"><i class="fas fa-home"></i> Home</a></li>
+              <li><a href="#/stories"><i class="fas fa-map-marked-alt"></i> Stories</a></li>
+              <li><a href="#/add-story"><i class="fas fa-plus-circle"></i> Add Story</a></li>
+              <li><a href="#/about"><i class="fas fa-info-circle"></i> About</a></li>
+            </ul>
+          </nav>
+
+          <div id="auth-buttons" class="auth-buttons">
+            <a href="#/login" class="auth-btn login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+            <a href="#/register" class="auth-btn register-btn"><i class="fas fa-user-plus"></i> Register</a>
+          </div>
+
+          <button id="drawer-button" class="drawer-button" aria-label="Toggle navigation menu">
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" class="main-content"></main>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""></script>
+  </body>
+</html>

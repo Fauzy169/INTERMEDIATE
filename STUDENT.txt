@@ -1,0 +1,4 @@
+STUDENT_NAME: [Your Full Name]
+STUDENT_EMAIL: [Your Email]
+STUDENT_ID: [Your Student ID]
+MAP_SERVICE_API_KEY: PJJzdTS3sMYydnGU89hq 
