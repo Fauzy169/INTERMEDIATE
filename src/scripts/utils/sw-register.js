@@ -4,7 +4,7 @@ import { subscribePushNotification } from '../data/api';
 const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js', {
+      const registration = await navigator.serviceWorker.register('/sw.bundle.js', {
         scope: '/',
       });
       console.log('ServiceWorker registration successful with scope: ', registration.scope);
