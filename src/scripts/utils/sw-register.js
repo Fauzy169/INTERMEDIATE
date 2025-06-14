@@ -21,7 +21,7 @@ const registerServiceWorker = async () => {
           applicationServerKey: CONFIG.VAPID_PUBLIC_KEY,
         });
 
-        // Kirim hanya field yang diizinkan
+        // Filter hanya data yang diizinkan oleh API
         const raw = subscription.toJSON();
         const safeSubscription = {
           endpoint: raw.endpoint,
