@@ -31,21 +31,34 @@ module.exports = merge(common, {
   },
   plugins: [
     new CleanWebpackPlugin(),
-    new MiniCssExtractPlugin(),
+    new MiniCssExtractPlugin({
+      filename: 'app.css', // agar file stabil & mudah dicache
+    }),
     new WorkboxPlugin.GenerateSW({
       swDest: 'service-worker.js',
       clientsClaim: true,
       skipWaiting: true,
-      runtimeCaching: [{
-        urlPattern: /\.(?:png|jpg|jpeg|svg|css|js)$/,
-        handler: 'CacheFirst',
-        options: {
-          cacheName: 'assets-cache',
-          expiration: {
-            maxEntries: 50,
+      runtimeCaching: [
+        {
+          // ✅ Cache seluruh assets statis (js, css, gambar, favicon, html)
+          urlPattern: /\.(?:png|jpg|jpeg|svg|css|js|html)$/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'assets-cache',
+            expiration: {
+              maxEntries: 60,
+            },
           },
         },
-      }],
+        {
+          // ✅ Cache untuk API cerita
+          urlPattern: /^https:\/\/story-api\.dicoding\.dev\/v1\/stories/,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'stories-api-cache',
+          },
+        },
+      ],
     }),
   ],
 });

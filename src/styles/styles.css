@@ -2027,3 +2027,42 @@ button:hover, a:hover {
   }
 }
 
+.not-found-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 70vh;
+  text-align: center;
+}
+
+.not-found-content {
+  max-width: 600px;
+}
+
+.not-found-title {
+  font-size: 96px;
+  font-weight: bold;
+  color: #673ab7;
+  margin-bottom: 0;
+}
+
+.not-found-subtitle {
+  font-size: 20px;
+  color: #666;
+  margin: 10px 0 30px;
+}
+
+.not-found-home-btn {
+  background-color: #673ab7;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 16px;
+  display: inline-block;
+  transition: background 0.3s ease;
+}
+
+.not-found-home-btn:hover {
+  background-color: #5e35b1;
+}

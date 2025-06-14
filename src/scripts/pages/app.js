@@ -38,16 +38,18 @@ class App {
         if (link.contains(event.target)) {
           this.#navigationDrawer.classList.remove('open');
         }
-      })
+      });
     });
   }
 
   async renderPage() {
     const url = getActiveRoute();
-    const page = routes[url];
+    const page = routes[url] || routes['*']; // fallback untuk 404
 
     this.#content.innerHTML = await page.render();
-    await page.afterRender();
+    if (typeof page.afterRender === 'function') {
+      await page.afterRender();
+    }
   }
 }
 
