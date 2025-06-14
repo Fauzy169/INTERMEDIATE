@@ -6,7 +6,7 @@ import { initMap, addMarkers } from '../../utils/map';
 export default class StoryPage {
   constructor() {
     this._map = null;
-    this._presenter = StoryPresenter; // ✅ gunakan langsung object
+    this._presenter = StoryPresenter;
     this._abortController = new AbortController();
     this._stories = [];
     this._currentPage = 1;
@@ -27,11 +27,11 @@ export default class StoryPage {
         <div id="stories" class="stories-grid"></div>
         <div class="load-more-container">
           <button id="loadMoreBtn" class="load-more-btn ${this._hasMore ? '' : 'hidden'}">
-            ${this._isLoading ? 
-              '<i class="fas fa-spinner fa-spin"></i> Loading...' : 
+            ${this._isLoading ?
+              '<i class="fas fa-spinner fa-spin"></i> Loading...' :
               'Load More Stories'}
           </button>
-          ${!this._hasMore ? 
+          ${!this._hasMore ?
             '<p class="no-more">No more stories to load</p>' : ''}
         </div>
       </section>
@@ -41,7 +41,7 @@ export default class StoryPage {
   async afterRender() {
     try {
       await this._initMap();
-      await this._presenter.init(this); // ✅ panggil init()
+      await this._presenter.init(this);
       this._setupEventListeners();
     } catch (error) {
       if (error.name !== 'AbortError') {
@@ -55,7 +55,7 @@ export default class StoryPage {
     if (!mapContainer) return;
 
     try {
-      this._map = initMap('map', {
+      this._map = await initMap('map', {
         center: CONFIG.DEFAULT_MAP_CENTER,
         zoom: CONFIG.DEFAULT_MAP_ZOOM,
       });

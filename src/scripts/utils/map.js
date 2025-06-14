@@ -3,12 +3,43 @@ import CONFIG from '../config';
 let mapInstance = null;
 let tileLayers = {};
 
-export const initMap = (elementId, options = {}) => {
+/**
+ * Tunggu hingga elemen DOM tersedia, maksimal 10x percobaan
+ */
+const waitForElement = (id, retries = 10, delay = 100) =>
+  new Promise((resolve, reject) => {
+    const attempt = (remaining) => {
+      const el = document.getElementById(id);
+      if (el) {
+        resolve(el);
+      } else if (remaining <= 0) {
+        reject(new Error(`Element #${id} not found after waiting.`));
+      } else {
+        setTimeout(() => attempt(remaining - 1), delay);
+      }
+    };
+    attempt(retries);
+  });
+
+/**
+ * Inisialisasi peta Leaflet
+ * @param {string} elementId - ID elemen HTML tempat map akan dirender
+ * @param {object} options - Opsi tambahan (center, zoom, dll)
+ * @returns {object} mapInstance
+ */
+export const initMap = async (elementId, options = {}) => {
   if (typeof L === 'undefined') {
     throw new Error('Leaflet library is not loaded. Please make sure Leaflet is properly included in your project.');
   }
 
-  if (mapInstance) return mapInstance;
+  // Pastikan elemen sudah tersedia di DOM
+  await waitForElement(elementId);
+
+  // Bersihkan map lama jika ada
+  if (mapInstance) {
+    mapInstance.remove();
+    mapInstance = null;
+  }
 
   const defaultOptions = {
     center: CONFIG.DEFAULT_MAP_CENTER,
@@ -16,17 +47,24 @@ export const initMap = (elementId, options = {}) => {
   };
 
   const mapOptions = { ...defaultOptions, ...options };
-  
+
   mapInstance = L.map(elementId).setView(mapOptions.center, mapOptions.zoom);
 
   tileLayers.openStreetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
-  }).addTo(mapInstance);
+  });
+
+  tileLayers.openStreetMap.addTo(mapInstance);
 
   return mapInstance;
 };
 
+/**
+ * Tambahkan marker ke peta dari daftar story
+ * @param {object} map - Instance Leaflet map
+ * @param {Array} stories - Daftar cerita dengan lat, lon, deskripsi
+ */
 export const addMarkers = (map, stories) => {
   if (typeof L === 'undefined') {
     console.error('Leaflet library is not loaded. Cannot add markers.');
@@ -35,10 +73,9 @@ export const addMarkers = (map, stories) => {
 
   stories.forEach(story => {
     if (story.lat && story.lon) {
-      let header = story.name + "'s Story"; // Default header
+      let header = story.name || "User's Story";
       let content = story.description;
-      
-      // Parse header tags if they exist
+
       const headerMatch = story.description.match(/\[HEADER\](.*?)\[\/HEADER\]/s);
       if (headerMatch && headerMatch[1]) {
         header = headerMatch[1].trim();
@@ -60,6 +97,10 @@ export const addMarkers = (map, stories) => {
   });
 };
 
+/**
+ * Ambil lokasi user saat ini dengan Promise
+ * @returns {Promise<{lat: number, lon: number}>}
+ */
 export const getCurrentLocation = () => {
   return new Promise((resolve, reject) => {
     if (navigator.geolocation) {
@@ -75,3 +116,9 @@ export const getCurrentLocation = () => {
     }
   });
 };
+
+/**
+ * Ambil instance aktif dari map (opsional)
+ * @returns {object|null}
+ */
+export const getMapInstance = () => mapInstance;

@@ -23,7 +23,6 @@ export default class StoryDetailPage {
   async afterRender() {
     const { id } = this._parseUrl();
 
-    // Handle back button with transition
     const backLink = document.querySelector('.back-link');
     if (backLink) {
       backLink.addEventListener('click', (e) => {
@@ -42,7 +41,6 @@ export default class StoryDetailPage {
 
     await this._loadStory(id);
 
-    // Set up image transition
     const detailImage = document.querySelector('.story-detail-image');
     if (detailImage) {
       detailImage.style.viewTransitionName = 'story-detail-image';
@@ -51,39 +49,34 @@ export default class StoryDetailPage {
 
   _parseUrl() {
     const url = window.location.hash.slice(1).split('/');
-    return {
-      id: url[2]
-    };
+    return { id: url[2] };
   }
 
   async _loadStory(id) {
     try {
       const token = localStorage.getItem(CONFIG.USER_TOKEN_KEY);
       const response = await getStoryDetail(id, token);
-
-      // Check for valid response structure
       if (!response || typeof response !== 'object' || !response.story) {
         throw new Error('Invalid story data structure');
       }
 
       this._story = response.story;
-      await saveData(this._story); // <== SIMPAN ke IndexedDB
+      await saveData(this._story);
       this._renderStory();
 
       if (this._story.lat && this._story.lon) {
-        this._initMap();
+        await this._initMap();
       }
     } catch (error) {
       console.error('Error loading story:', error);
 
-      // fallback to local IndexedDB
       try {
         const fallback = await getData(id);
         if (fallback) {
           this._story = fallback;
           this._renderStory();
           if (this._story.lat && this._story.lon) {
-            this._initMap();
+            await this._initMap();
           }
           return;
         }
@@ -95,12 +88,12 @@ export default class StoryDetailPage {
     }
   }
 
-  _initMap() {
+  async _initMap() {
     try {
       const mapContainer = document.getElementById('storyMap');
       if (!mapContainer) return;
 
-      this._map = initMap('storyMap', {
+      this._map = await initMap('storyMap', {
         center: [this._story.lat, this._story.lon],
         zoom: 12,
       });
@@ -145,8 +138,6 @@ export default class StoryDetailPage {
       if (headerMatch && headerMatch[1]) {
         header = headerMatch[1].trim();
         description = description.replace(headerRegex, '').trim();
-        description = description.replace(/\[HEADER\].*$/s, '').trim();
-        description = description.replace(/^.*\[\/HEADER\]/s, '').trim();
       }
 
       document.getElementById('storyDetail').innerHTML = `
@@ -197,9 +188,7 @@ export default class StoryDetailPage {
         <p>${errorMessage}</p>
         <div class="error-actions">
           <a href="#/stories" class="btn">Back to Stories</a>
-          ${showLogin ? `
-            <a href="#/login" class="btn btn-primary">Login</a>
-          ` : ''}
+          ${showLogin ? `<a href="#/login" class="btn btn-primary">Login</a>` : ''}
         </div>
       </div>
     `;
