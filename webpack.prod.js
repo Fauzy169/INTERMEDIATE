@@ -1,5 +1,5 @@
-const common = require('./webpack.common.js');
 const { merge } = require('webpack-merge');
+const common = require('./webpack.common.js');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
@@ -33,18 +33,19 @@ module.exports = merge(common, {
     new CleanWebpackPlugin(),
     new MiniCssExtractPlugin(),
     new WorkboxPlugin.GenerateSW({
-    clientsClaim: true,
-    skipWaiting: true,
-    runtimeCaching: [{
-      urlPattern: /\.(?:png|jpg|jpeg|svg|css|js)$/,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'assets-cache',
-        expiration: {
-          maxEntries: 50,
+      swDest: 'service-worker.js',
+      clientsClaim: true,
+      skipWaiting: true,
+      runtimeCaching: [{
+        urlPattern: /\.(?:png|jpg|jpeg|svg|css|js)$/,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'assets-cache',
+          expiration: {
+            maxEntries: 50,
+          },
         },
-      },
-    }],
-  }),
+      }],
+    }),
   ],
 });

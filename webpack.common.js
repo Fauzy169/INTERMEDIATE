@@ -1,4 +1,3 @@
-// webpack.common.js
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -30,7 +29,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(png|jpe?g|gif)$/i,
+        test: /\.(png|jpe?g|gif|svg)$/i,
         type: 'asset/resource',
       },
     ],
@@ -52,6 +51,10 @@ module.exports = {
         {
           from: path.resolve(__dirname, 'src/manifest.json'),
           to: path.resolve(__dirname, 'dist/'),
+        },
+        {
+          from: path.resolve(__dirname, 'src/sw.js'),
+          to: 'sw.js',  // ✅ Ini memastikan file ada di root dist/
         },
       ],
     }),
