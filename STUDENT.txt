@@ -1,5 +1,6 @@
-STUDENT_NAME: [Your Full Name]
-STUDENT_EMAIL: [Your Email]
-STUDENT_ID: [Your Student ID]
+STUDENT_NAME: Ahmad Fausi Febrian
+STUDENT_EMAIL: ahmadfauzy169@gmail.com 
+DICODING_SUDENT_EMAIL : fc135d5y0026@student.devacademy.id
+STUDENT_ID: fc135d5y0026
 MAP_SERVICE_API_KEY: PJJzdTS3sMYydnGU89hq 
-DEPLOYMENT_URL: https://submissionintermediate.netlify.app
+DEPLOYMENT_URL: https://submissionintermediatefinals.netlify.app

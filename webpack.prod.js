@@ -3,6 +3,7 @@ const common = require('./webpack.common.js');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
+const path = require('path');
 
 module.exports = merge(common, {
   mode: 'production',
@@ -32,33 +33,11 @@ module.exports = merge(common, {
   plugins: [
     new CleanWebpackPlugin(),
     new MiniCssExtractPlugin({
-      filename: 'app.css', // agar file stabil & mudah dicache
+      filename: 'app.css',
     }),
-    new WorkboxPlugin.GenerateSW({
+    new WorkboxPlugin.InjectManifest({
+      swSrc: path.resolve(__dirname, 'src/sw.js'),
       swDest: 'service-worker.js',
-      clientsClaim: true,
-      skipWaiting: true,
-      runtimeCaching: [
-        {
-          // ✅ Cache seluruh assets statis (js, css, gambar, favicon, html)
-          urlPattern: /\.(?:png|jpg|jpeg|svg|css|js|html)$/,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'assets-cache',
-            expiration: {
-              maxEntries: 60,
-            },
-          },
-        },
-        {
-          // ✅ Cache untuk API cerita
-          urlPattern: /^https:\/\/story-api\.dicoding\.dev\/v1\/stories/,
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'stories-api-cache',
-          },
-        },
-      ],
     }),
   ],
 });

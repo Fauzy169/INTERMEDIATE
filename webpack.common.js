@@ -6,7 +6,6 @@ const webpack = require('webpack');
 module.exports = {
   entry: {
     app: path.resolve(__dirname, 'src/scripts/index.js'),
-    sw: path.resolve(__dirname, 'src/sw.js'),
   },
   output: {
     filename: '[name].bundle.js',
@@ -51,11 +50,7 @@ module.exports = {
         {
           from: path.resolve(__dirname, 'src/manifest.json'),
           to: path.resolve(__dirname, 'dist/'),
-        },
-        {
-          from: path.resolve(__dirname, 'src/sw.js'),
-          to: 'sw.js',  // ✅ Ini memastikan file ada di root dist/
-        },
+        }
       ],
     }),
   ],

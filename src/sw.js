@@ -1,4 +1,7 @@
-// src/sw.js
+import { precacheAndRoute } from 'workbox-precaching';
+
+precacheAndRoute(self.__WB_MANIFEST || []);
+
 const CACHE_NAME = 'StoryApp-V1';
 const ASSETS_TO_CACHE = [
   '/',
@@ -6,7 +9,6 @@ const ASSETS_TO_CACHE = [
   '/favicon.png',
   '/manifest.json',
   '/app.bundle.js',
-  '/sw.bundle.js',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
