@@ -3,7 +3,7 @@ import {
   getStories,
   getStoriesWithLocation,
 } from '../../data/api';
-import { saveData, getAllData } from '../../data/database';
+import { getAllData } from '../../data/database';
 
 const StoryPresenter = {
   async init(view) {
@@ -35,11 +35,6 @@ const StoryPresenter = {
       const newStories = response.listStory.filter(newStory =>
         !this._stories.some(existingStory => existingStory.id === newStory.id)
       );
-
-      // Simpan cerita ke IndexedDB
-      for (const story of newStories) {
-        await saveData(story);
-      }
 
       if (loadMore) {
         this._stories = [...this._stories, ...newStories];

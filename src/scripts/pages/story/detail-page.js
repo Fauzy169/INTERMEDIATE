@@ -45,6 +45,17 @@ export default class StoryDetailPage {
     if (detailImage) {
       detailImage.style.viewTransitionName = 'story-detail-image';
     }
+
+    // Tambahkan tombol simpan offline
+    document.getElementById('saveOfflineBtn')?.addEventListener('click', async () => {
+      try {
+        await saveData(this._story);
+        alert('Cerita berhasil disimpan untuk offline!');
+      } catch (err) {
+        console.error('Save error:', err);
+        alert('Gagal menyimpan cerita: ' + err.message);
+      }
+    });
   }
 
   _parseUrl() {
@@ -61,7 +72,6 @@ export default class StoryDetailPage {
       }
 
       this._story = response.story;
-      await saveData(this._story);
       this._renderStory();
 
       if (this._story.lat && this._story.lon) {
@@ -157,6 +167,10 @@ export default class StoryDetailPage {
                 <small>Coordinates: ${this._story.lat.toFixed(4)}, ${this._story.lon.toFixed(4)}</small>
               </div>
             ` : ''}
+
+            <button id="saveOfflineBtn" class="submit-btn" style="margin-top: 20px;">
+              <i class="fas fa-save"></i> Simpan Cerita untuk Offline
+            </button>
           </div>
         </article>
       `;
