@@ -1,11 +1,9 @@
+import L from 'leaflet';
 import CONFIG from '../config';
 
 let mapInstance = null;
 let tileLayers = {};
 
-/**
- * Tunggu hingga elemen DOM tersedia, maksimal 10x percobaan
- */
 const waitForElement = (id, retries = 10, delay = 100) =>
   new Promise((resolve, reject) => {
     const attempt = (remaining) => {
@@ -32,10 +30,10 @@ export const initMap = async (elementId, options = {}) => {
     throw new Error('Leaflet library is not loaded. Please make sure Leaflet is properly included in your project.');
   }
 
-  // Pastikan elemen sudah tersedia di DOM
+  
   await waitForElement(elementId);
 
-  // Bersihkan map lama jika ada
+  
   if (mapInstance) {
     mapInstance.remove();
     mapInstance = null;

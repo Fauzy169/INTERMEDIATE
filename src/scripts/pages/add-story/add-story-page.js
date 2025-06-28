@@ -1,3 +1,4 @@
+import L from 'leaflet';
 import CONFIG from '../../config';
 import { addStory, addStoryAsGuest } from '../../data/api';
 import { initMap } from '../../utils/map';

@@ -1,3 +1,4 @@
+import L from 'leaflet';
 import { getStoryDetail } from '../../data/api';
 import { showFormattedDate } from '../../utils';
 import { initMap } from '../../utils/map';

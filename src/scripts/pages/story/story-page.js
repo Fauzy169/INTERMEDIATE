@@ -1,3 +1,4 @@
+import L from 'leaflet';
 import StoryPresenter from './story-presenter';
 import CONFIG from '../../config';
 import { showFormattedDate } from '../../utils';
