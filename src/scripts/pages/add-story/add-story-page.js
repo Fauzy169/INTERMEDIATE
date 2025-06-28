@@ -47,7 +47,7 @@ export default class AddStoryPage {
 
   async afterRender() {
     window.addEventListener('hashchange', this._stopCamera.bind(this));
-    await this._initMap();
+    await this._initMap(); // Penting: await agar peta siap sebelum event click
     this._setupEventListeners();
     this._cleanup();
   }
@@ -82,7 +82,7 @@ export default class AddStoryPage {
 
   async _initMap() {
     try {
-      this._map = initMap('map');
+      this._map = await initMap('map'); // <--- FIXED: pastikan sudah di-await
       this._map.on('click', (e) => {
         if (this._marker) this._map.removeLayer(this._marker);
         this._marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(this._map);
